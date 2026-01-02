@@ -11,31 +11,6 @@ The application is capable of detecting uncertainty and lack of information as w
 
 ----
 
-## Directory Structure
-
-knowledgebase-search-and-enrichment/
-├── app.py                      
-├── requirements.txt                                 
-├── config/
-│   └── settings.py              
-└── src/
-    ├── ingestion/
-    │   ├── document_processor.py 
-    │   └── manual_input.py       
-    ├── llm/
-    │   ├── llm_client.py         
-    │   └── prompts.py            
-    ├── rag/
-    │   ├── rag_pipeline.py       
-    │   └── retrieval.py          
-    └── storage/
-        ├── chroma_store.py       
-        ├── sqlite_store.py       
-        └── embeddings.py    
-
-
-----
-
 ## Implementation details
 
 ### 1. Chunking Logic - content-aware chunking strategies based on file type.
