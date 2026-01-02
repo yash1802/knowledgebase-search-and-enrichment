@@ -5,9 +5,17 @@
 ## Overview 
 
 
-A Retrieval-Augmented Generation (RAG) application that allows users to upload documents (PDF, DOCX, TXT, MD), manage a knowledge base and perform semantic search. 
+A Retrieval-Augmented Generation (RAG) application that allows users to upload documents (PDF, DOCX, TXT, MD), manage a knowledge base and query said knowledge base for answers. 
 
-The application is capable of detecting uncertainty and lack of information as well as suggesting ways to address said lack. 
+When answering a user query, the application:
+- uses relevant documents from the knowledge base as well as previous messages in the current chat.
+- detects uncertainty and lack of information. 
+- suggests ways to address said lack of data. 
+
+Users can also: 
+- Add data and information to the knowledge base by typing in the chat. 
+- Rate the assistant's message (STRETCH GOAL). 
+
 
 ----
 
