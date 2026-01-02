@@ -34,7 +34,6 @@ def initialize_session_state():
         st.session_state.current_chat_id = default_chat_id
 
 
-
 def get_file_size(file_path):
     try:
         return Path(file_path).stat().st_size
@@ -162,7 +161,6 @@ def display_attached_files_preview(chat_id):
                 st.rerun()
 
 
-
 def process_files_to_knowledge_base(uploaded_files):
     if not uploaded_files:
         return []
@@ -235,7 +233,6 @@ def process_files_to_knowledge_base(uploaded_files):
     return processed_files
 
 
-
 def display_message_metadata(metadata):
     if not metadata:
         return
@@ -271,6 +268,17 @@ def display_message_metadata(metadata):
             st.write(f"• {suggestion_text}")
 
 
+def handle_feedback(message_id, rating):
+    try:
+        st.session_state.sqlite_store.add_feedback(
+            message_id=message_id, 
+            rating=rating
+        )
+        st.toast("Thank you for your feedback!", icon="🙏")
+    except Exception as e:
+        st.error(f"Error saving feedback: {e}")
+
+
 def display_chat_messages(chat_id):
     messages = st.session_state.sqlite_store.get_chat_messages(chat_id)
 
@@ -279,6 +287,9 @@ def display_chat_messages(chat_id):
         content = message["content"]
         metadata = message.get("metadata")
         files = message.get("files")
+        
+        # Get ID for feedback
+        message_id = message["id"]
 
         if role == "user":
             with st.chat_message("user"):
@@ -291,7 +302,26 @@ def display_chat_messages(chat_id):
                 st.write(content)
                 if metadata:
                     display_message_metadata(metadata)
-
+                
+                # Feedback UI
+                existing_feedback = st.session_state.sqlite_store.get_message_feedback(message_id)
+                
+                if existing_feedback:
+                    # User already voted
+                    rating = existing_feedback[0]
+                    icon = "👍" if rating == 1 else "👎"
+                    st.caption(f"You rated this answer: {icon}")
+                else:
+                    # User hasn't voted yet
+                    col1, col2, _ = st.columns([1, 1, 15])
+                    with col1:
+                        if st.button("👍", key=f"up_{message_id}", help="Helpful"):
+                            handle_feedback(message_id, 1)
+                            st.rerun()
+                    with col2:
+                        if st.button("👎", key=f"down_{message_id}", help="Not helpful"):
+                            handle_feedback(message_id, -1)
+                            st.rerun()
 
 
 def render_sidebar():
@@ -352,7 +382,6 @@ def render_sidebar():
                 if st.button("🧹 Clear History", key=f"clear_{chat_id}"):
                     st.session_state.sqlite_store.clear_chat_history(chat_id)
                     st.rerun()
-
 
 
 def render_file_upload_section():

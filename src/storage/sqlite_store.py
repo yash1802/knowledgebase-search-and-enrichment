@@ -1,4 +1,3 @@
-"""SQLite storage for document and chunk metadata."""
 import sqlite3
 from datetime import datetime
 from config.settings import SQLITE_DB_PATH
@@ -75,6 +74,18 @@ class SQLiteStore:
                 metadata TEXT,
                 timestamp DATETIME NOT NULL,
                 FOREIGN KEY (chat_id) REFERENCES chats(id) ON DELETE CASCADE
+            )
+        """)
+
+        # Feedback table
+        cursor.execute("""
+            CREATE TABLE IF NOT EXISTS feedback (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                message_id INTEGER NOT NULL,
+                rating INTEGER NOT NULL,
+                comment TEXT,
+                timestamp DATETIME NOT NULL,
+                FOREIGN KEY (message_id) REFERENCES chat_messages(id) ON DELETE CASCADE
             )
         """)
 
@@ -383,4 +394,32 @@ class SQLiteStore:
 
         conn.commit()
         conn.close()
+    
+    def add_feedback(self, message_id, rating, comment=None):
+        """
+        Add user feedback for a message.
+        rating: 1 for thumbs up, -1 for thumbs down
+        """
+        conn = sqlite3.connect(self.db_path)
+        cursor = conn.cursor()
 
+        cursor.execute("""
+            INSERT INTO feedback (message_id, rating, comment, timestamp)
+            VALUES (?, ?, ?, ?)
+        """, (message_id, rating, comment, datetime.now()))
+
+        conn.commit()
+        conn.close()
+
+    def get_message_feedback(self, message_id):
+        """
+        Check if a message already has feedback.
+        Returns tuple (rating, comment) or None.
+        """
+        conn = sqlite3.connect(self.db_path)
+        cursor = conn.cursor()
+        
+        cursor.execute("SELECT rating, comment FROM feedback WHERE message_id = ?", (message_id,))
+        row = cursor.fetchone()
+        conn.close()
+        return row
