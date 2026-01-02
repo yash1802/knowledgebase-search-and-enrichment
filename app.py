@@ -115,16 +115,26 @@ def create_chat_with_auto_name(name=None):
     return st.session_state.sqlite_store.create_chat(name)
 
 
-def delete_document(doc_id):
-    sqlite_store = SQLiteStore()
+def delete_document(doc_id, file_path):
+    sqlite_store = st.session_state.sqlite_store
     chroma_store = ChromaStore()
 
+    # 1. Delete from Vector Store (Chroma)
     chunks = sqlite_store.get_chunks_by_document_id(doc_id)
-
     chroma_ids = [chunk['chroma_id'] for chunk in chunks if chunk.get('chroma_id')]
     if chroma_ids:
         chroma_store.delete_chunks_by_ids(chroma_ids)
 
+    # 2. Delete physical file from disk
+    if file_path:
+        try:
+            path_obj = Path(file_path)
+            if path_obj.exists():
+                path_obj.unlink()  # This deletes the file
+        except Exception as e:
+            st.error(f"Error deleting file from disk: {e}")
+
+    # 3. Delete metadata from SQLite
     sqlite_store.delete_document(doc_id)
 
 
@@ -168,7 +178,7 @@ def process_files_to_knowledge_base(uploaded_files):
     processor = DocumentProcessor()
     embedding_generator = EmbeddingGenerator()
     chroma_store = ChromaStore()
-    sqlite_store = SQLiteStore()
+    sqlite_store = st.session_state.sqlite_store
 
     processed_files = []
 
@@ -408,7 +418,7 @@ def render_file_upload_section():
 def render_file_list():
     st.subheader("📄 Uploaded Documents")
 
-    sqlite_store = SQLiteStore()
+    sqlite_store = st.session_state.sqlite_store
     documents = sqlite_store.get_all_documents()
 
     if not documents:
@@ -434,7 +444,7 @@ def render_file_list():
         with col4:
             if st.button("🗑️", key=f"delete_doc_{doc['id']}"):
                 with st.spinner("Deleting..."):
-                    delete_document(doc['id'])
+                    delete_document(doc['id'], doc['file_path'])
                 st.success("File deleted")
                 st.rerun()
 
