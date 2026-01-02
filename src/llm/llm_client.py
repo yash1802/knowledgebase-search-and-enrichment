@@ -72,10 +72,10 @@ class LLMClient:
                 "enrichment_suggestions": [],
                 "sources": [],
             }
-
+    
     def _build_context(self, chunks):
         if not chunks:
-            return "No relevant documents found."
+            return "<documents></documents>"
 
         # Group chunks by filename (preserving order of first appearance)
         docs_dict = {}
@@ -90,15 +90,16 @@ class LLMClient:
                 doc_order.append(filename)
             docs_dict[filename].append(text)
         
-        # Build context with unique document headers
-        context_parts = []
+        # Building context with XML tags
+        context_parts = ["<documents>"]
         for i, filename in enumerate(doc_order, 1):
             chunk_texts = docs_dict[filename]
-            # Combine all chunks from this document
             combined_text = "\n\n".join(chunk_texts)
+            
             context_parts.append(
-                f"[Document {i}: {filename}]\n{combined_text}\n"
+                f'  <document index="{i}" source="{filename}">\n{combined_text}\n  </document>'
             )
+        context_parts.append("</documents>")
         
         return "\n".join(context_parts)
 
@@ -158,6 +159,7 @@ Provide your response as a JSON object with the following structure:
 }}
 
 Important guidelines:
+- Analyze the content inside <documents> tags to answer the query.
 - Answer based on the provided documents and conversation history
 - If the provided documents don't have enough information or they have no information at all that can be used to answer the question, list the specific information that is missing in "missing_info". 
 - Absence of evidence is not evidence of absence. 
