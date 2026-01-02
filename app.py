@@ -378,20 +378,15 @@ def render_sidebar():
                     st.rerun()
 
         with col2:
-            with st.popover("⋮", use_container_width=True):
-                if st.button("🗑️ Delete", key=f"delete_{chat_id}"):
-                    if len(chats) > 1:
-                        st.session_state.sqlite_store.delete_chat(chat_id)
-                        remaining_chats = st.session_state.sqlite_store.get_all_chats()
-                        if remaining_chats:
-                            st.session_state.current_chat_id = remaining_chats[0]["id"]
-                        st.rerun()
-                    else:
-                        st.sidebar.warning("Cannot delete the last chat.")
-
-                if st.button("🧹 Clear History", key=f"clear_{chat_id}"):
-                    st.session_state.sqlite_store.clear_chat_history(chat_id)
+            if st.button("🗑️", key=f"delete_chat_{chat_id}", help="Delete Chat"):
+                if len(chats) > 1:
+                    st.session_state.sqlite_store.delete_chat(chat_id)
+                    remaining_chats = st.session_state.sqlite_store.get_all_chats()
+                    if remaining_chats:
+                        st.session_state.current_chat_id = remaining_chats[0]["id"]
                     st.rerun()
+                else:
+                    st.sidebar.warning("Cannot delete the last chat.")
 
 
 def render_file_upload_section():
