@@ -9,4 +9,4 @@ uvicorn>=0.24.0
 pydantic>=2.5.0
 numpy>=1.24.0
 sentence-transformers>=2.2.0
-
+tenacity>=8.2.0

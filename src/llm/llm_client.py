@@ -1,17 +1,27 @@
 import json
-from openai import OpenAI
+import openai
+from tenacity import retry, stop_after_attempt, wait_random_exponential, retry_if_exception_type
 from config.settings import OPENAI_API_KEY, LLM_MODEL
 from src.llm.prompts import INTENT_CLASSIFICATION_TEMPLATE, RAG_ANSWER_TEMPLATE, RAG_SYSTEM_PROMPT, INTENT_CLASSIFICATION_SYSTEM_PROMPT, CONVERSATIONAL_SYSTEM_PROMPT
+
 
 class LLMClient:
 
     def __init__(self):
         if not OPENAI_API_KEY:
             raise ValueError("OPENAI_API_KEY not set in environment")
-        self.client = OpenAI(api_key=OPENAI_API_KEY)
+        self.client = openai.OpenAI(api_key=OPENAI_API_KEY)
         self.model = LLM_MODEL
 
-    def generate_answer(self,query,context_chunks,chat_history = None):
+    @retry(
+        wait=wait_random_exponential(min=1, max=60),
+        stop=stop_after_attempt(3),
+        retry=retry_if_exception_type((openai.RateLimitError, openai.APIConnectionError, openai.APITimeoutError, openai.InternalServerError))
+    )
+    def _chat_completion(self, **kwargs):
+        return self.client.chat.completions.create(**kwargs)
+
+    def generate_answer(self, query, context_chunks, chat_history=None):
         
         context = self._build_context(context_chunks)
         prompt = self._create_prompt_with_context(query, context)
@@ -31,7 +41,7 @@ class LLMClient:
         })
 
         try:
-            response = self.client.chat.completions.create(
+            response = self._chat_completion(
                 model=self.model,
                 messages=messages,
                 response_format={"type": "json_object"},
@@ -108,7 +118,6 @@ class LLMClient:
         manual_input_map = {}
         for chunk in chunks:
             filename = chunk.get("filename", "")
-            # Check if it's a manual input file (new or old format)
             if filename == MANUAL_INFO_FILENAME or filename.startswith("manual_input_"):
                 text = chunk.get("text", "").strip()
                 if filename not in manual_input_map:
@@ -164,7 +173,7 @@ class LLMClient:
         Generate a brief response for conversational (non-informational) messages.
         """
         try:
-            response = self.client.chat.completions.create(
+            response = self._chat_completion(
                 model=self.model,
                 messages=[
                     {
@@ -204,8 +213,6 @@ class LLMClient:
         
         return "I'm here to help! You can ask me questions or provide information to add to my knowledge base."
 
-    
-
     def classify_intent(self, message):
         """
         Classify user message intent.
@@ -213,7 +220,7 @@ class LLMClient:
         prompt = self._create_classification_prompt(message)
 
         try:
-            response = self.client.chat.completions.create(
+            response = self._chat_completion(
                 model=self.model,
                 messages=[
                     {
