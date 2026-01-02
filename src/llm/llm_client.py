@@ -157,7 +157,7 @@ Provide your response as a JSON object with the following structure:
     "sources": ["list of document filenames used"],
 }}
 
-Important:
+Important guidelines:
 - Answer based on the provided documents and conversation history
 - If the provided documents don't have enough information or they have no information at all that can be used to answer the question, list the specific information that is missing in "missing_info". 
 - Absence of evidence is not evidence of absence. 
@@ -179,6 +179,89 @@ Important:
   * Medium: The question is partially answered. Some key details are missing, ambiguous, or inferred. missing_info is non-empty.
   * Low: The documents do not meaningfully answer the question. The information required to answer the question is missing, missing_info is non-empty.
 - When assessing confidence, consider only information **directly relevant to the specific query**, not incidental context about the entity. This ensures confidence reflects the certainty of the answer to the specific fact being asked.
+
+Examples: 
+
+1. Explicit evidence → High confidence:
+Q: Has Person A studied at University X?
+Docs: "Master’s in Management, University X (2024–2025)"
+Response:
+{{
+  "answer": "Yes, Person A is currently a candidate for a Master's in Management at University X.",
+  "confidence": "high",
+  "missing_info": [],
+  "enrichment_suggestions": [],
+  "sources": [<source 1>,...,<source n>]
+}}
+
+2. Absence of evidence → Low confidence:
+Q: Has Person A studied management at University Y?
+Docs: Only University X mentioned; no info on University Y
+Response:
+{{
+  "answer": "The documents do not provide information confirming whether Person A has studied management at University Y.",
+  "confidence": "low",
+  "missing_info": ["Whether Person A studied management at University Y"],
+  "enrichment_suggestions": [
+    "Check Person A's LinkedIn education section"
+  ],
+  "sources": [<source 1>,...,<source n>]
+}}
+
+3. No relevant information → Low confidence:
+Q: Is Person B currently married?
+Docs: Only professional history provided
+Response:
+{{
+  "answer": "The documents do not contain information about Person B's current marital status.",
+  "confidence": "low",
+  "missing_info": ["Person B's current marital status"],
+  "enrichment_suggestions": [
+    "Check public social media profiles for relationship status",
+    "Consult official personal records if available"
+  ],
+  "sources": [<source 1>,...,<source n>]
+}}
+
+4. Explicit negation → High confidence "No":
+Q: Has Person C worked at Company Z?
+Docs: "Employment history: Company X (2019 – 2023)"; "Person C has not worked at Company Z."
+Response:
+{{
+  "answer": "No, Person C has not worked at Company Z.",
+  "confidence": "high",
+  "missing_info": [],
+  "enrichment_suggestions": [],
+  "sources": [<source 1>,...,<source n>]
+}}
+
+5. Full info is guaranteed to be in the knowledge base and the user query asks for a fact that is not in said info.
+Q: Has Person C worked at Company Z?
+Docs: Employment history that is complete and company Z is not mentioned as one of Person C's positions.
+Response:
+{{
+  "answer": "No, Person C has not worked at Company Z.",
+  "confidence": "high",
+  "missing_info": [],
+  "enrichment_suggestions": [],
+  "sources": [<source 1>,...,<source n>]
+}}
+
+
+6. Partial info → Medium confidence:
+Q: What is Person D’s current degree program?
+Docs: "Enrolled in a master's program" (degree name missing)
+Response:
+{{
+  "answer": "The documents indicate that Person D is enrolled in a master's program, but the specific degree is not stated.",
+  "confidence": "medium",
+  "missing_info": ["Name of the specific master's degree program"],
+  "enrichment_suggestions": [
+    "Check Person D's LinkedIn profile for full degree details",
+    "Review official university enrollment records"
+  ],
+  "sources": [<source 1>,...,<source n>]
+}}
 """
 
     def _normalize_response(self, response):
