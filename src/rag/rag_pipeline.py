@@ -20,7 +20,4 @@ class RAGPipeline:
         )
 
         llm_response["query"] = query
-        print(f"LLM response:\n {llm_response}")
-
         return llm_response
-
