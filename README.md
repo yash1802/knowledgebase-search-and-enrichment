@@ -14,25 +14,24 @@ The application is capable of detecting uncertainty and lack of information as w
 ## Directory Structure
 
 knowledgebase-search-and-enrichment/
-├── app.py                      # Main Streamlit application entry point
-├── requirements.txt            # Python dependencies
-├── .env                        # Environment variables (API keys)
+├── app.py                      
+├── requirements.txt                                 
 ├── config/
-│   └── settings.py             # Global configuration (paths, model names, constants)
+│   └── settings.py              
 └── src/
     ├── ingestion/
-    │   ├── document_processor.py # Logic for parsing, cleaning, and chunking files
-    │   └── manual_input.py       # Handling direct text input/enrichment
+    │   ├── document_processor.py 
+    │   └── manual_input.py       
     ├── llm/
-    │   ├── llm_client.py         # OpenAI API wrapper, retry logic, and response parsing
-    │   └── prompts.py            # Centralized prompt templates
+    │   ├── llm_client.py         
+    │   └── prompts.py            
     ├── rag/
-    │   ├── rag_pipeline.py       # Orchestrator connecting retrieval and generation
-    │   └── retrieval.py          # Hybrid retrieval logic (Vector Search + Re-ranking)
+    │   ├── rag_pipeline.py       
+    │   └── retrieval.py          
     └── storage/
-        ├── chroma_store.py       # Vector database (ChromaDB) interface
-        ├── sqlite_store.py       # Relational database (SQLite) for metadata/history
-        └── embeddings.py         # Embedding generation service
+        ├── chroma_store.py       
+        ├── sqlite_store.py       
+        └── embeddings.py    
 
 
 ----
@@ -83,16 +82,16 @@ knowledgebase-search-and-enrichment/
 
 ## Trade-offs
 
-1. Database Selection
+### 1. Database Selection
 
 - In production, PostGres + pgvector or a managed vector DB such as Pinecone, Weaviate are used due to superior indexing, filtering and scalability. However, using them would have incured operational overhead (provisioning, docker, etc). 
 - Given the time constraint and the scope of the task, using SQLite + Chroma is sufficient whilst being trivial to set up. 
 
-2. Frontend Framework. 
+### 2. Frontend Framework. 
 
 - Considering that the backend and AI focused nature of the assignment, opted for Streamlit instead of React/JS to avoid sinking time into frontend tooling, routing and state management.
 
-3. Model Selection.
+### 3. Model Selection.
 
 - Using open-source models locally has advantages like privacy as well as no API management and are well suited for this project especially since the knowledge base itself is local. However, using them would require quantization and other setup which would have cost time. 
 - Hence, GPT‑4o‑mini was used instead which has strong instruction following, supports structured outputs, is multimodal and is relatively inexpensive.
