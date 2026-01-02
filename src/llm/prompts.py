@@ -1,5 +1,3 @@
-# src/llm/prompts.py
-
 INTENT_CLASSIFICATION_TEMPLATE = """
 Analyze the following user message and classify its intent:
 
